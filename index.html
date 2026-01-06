@@ -1,215 +1,163 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Kingdom Simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;font-family:Arial;background:#111;color:#fff}
-.top{background:#222;padding:8px;display:flex;flex-wrap:wrap;gap:10px;font-size:13px}
-button{padding:8px;margin:5px}
+body{margin:0;background:#0f172a;color:#fff;font-family:Arial}
+.top{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#020617;font-size:13px}
+.top span{background:#1e293b;padding:4px 6px;border-radius:6px}
 .panel{display:none;padding:10px}
 .active{display:block}
-.menu{position:fixed;bottom:0;width:100%;background:#222;text-align:center}
-.log{font-size:12px;color:#ccc;max-height:150px;overflow:auto}
+button{padding:10px;margin:4px;border:none;border-radius:8px;background:#2563eb;color:#fff}
+.menu{position:fixed;bottom:0;width:100%;background:#020617;display:flex;flex-wrap:wrap;justify-content:space-around}
+.list{background:#1e293b;padding:6px;border-radius:8px;margin:5px}
 </style>
 </head>
 
 <body>
 
 <div class="top">
-🌾 <span id="wheat"></span>
-🍖 <span id="meat"></span>
-👥 <span id="pop"></span>
-⚔ <span id="army"></span>
-💰 <span id="gold"></span>
-🎖 <span id="genCount"></span>
-📅 <span id="month"></span>/<span id="year"></span>
+<span>💰 <b id="gold"></b></span>
+<span>🌾 <b id="food"></b></span>
+<span>👥 <b id="pop"></b></span>
+<span>⚔ <b id="army"></b></span>
+<span>😊 <b id="happy"></b>%</span>
+<span>📅 <b id="year"></b></span>
 </div>
 
-<div id="map" class="panel active">
-<h3>🗺 Kingdoms (1400 AD)</h3>
-<ul id="klist"></ul>
-</div>
-
-<div id="generals" class="panel">
-<h3>🎖 Generals</h3>
-<button onclick="hireGeneral()">Hire General (100 Gold)</button>
-<ul id="glist"></ul>
-</div>
-
-<div id="diplo" class="panel">
-<h3>🤝 Diplomacy</h3>
-<ul id="dlist"></ul>
-</div>
-
-<div id="war" class="panel">
-<h3>⚔ War Room</h3>
-<button onclick="attack()">Attack Selected Enemy</button>
-<p id="warTarget"></p>
-</div>
-
-<div class="panel" id="turn">
-<button onclick="nextTurn()">➡ NEXT TURN</button>
-<div class="log" id="log"></div>
-</div>
+<div id="map" class="panel active"></div>
+<div id="trade" class="panel"></div>
+<div id="diplo" class="panel"></div>
+<div id="armyP" class="panel"></div>
+<div id="gen" class="panel"></div>
+<div id="council" class="panel"></div>
+<div id="save" class="panel"></div>
 
 <div class="menu">
 <button onclick="openP('map')">Map</button>
-<button onclick="openP('generals')">Generals</button>
+<button onclick="openP('trade')">Trade</button>
 <button onclick="openP('diplo')">Diplomacy</button>
-<button onclick="openP('war')">War</button>
-<button onclick="openP('turn')">Turn</button>
+<button onclick="openP('armyP')">Army</button>
+<button onclick="openP('gen')">Generals</button>
+<button onclick="openP('council')">Council</button>
+<button onclick="openP('save')">Save</button>
 </div>
 
 <script>
-let king={
- gold:500,
- wheat:200,
- meat:100,
- population:1200,
- army:400
+let game={
+gold:500,food:300,pop:1200,army:400,happy:70,year:1400,
+generals:0,
+kingdoms:[
+{name:"England",owner:false,power:350},
+{name:"France",owner:false,power:400},
+{name:"Ottoman",owner:false,power:500},
+{name:"Ming",owner:false,power:600}
+]
 };
 
-let generals=[];
-let selectedEnemy=null;
-
-let month=1,year=1400;
-
-let kingdoms=[
-{name:"England",relation:"Enemy",power:400},
-{name:"France",relation:"Neutral",power:380},
-{name:"Ottoman Empire",relation:"Enemy",power:500},
-{name:"Ming China",relation:"Neutral",power:600}
-];
-
-function update(){
- wheat.innerText=king.wheat;
- meat.innerText=king.meat;
- pop.innerText=king.population;
- army.innerText=king.army;
- gold.innerText=king.gold;
- genCount.innerText=generals.length;
- monthSpan.innerText=month;
- yearSpan.innerText=year;
-}
-
 function openP(id){
- document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
- document.getElementById(id).classList.add("active");
+document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+render();
 }
 
-function hireGeneral(){
- if(king.gold>=100){
-  king.gold-=100;
-  generals.push({
-   atk:Math.floor(Math.random()*20+10),
-   def:Math.floor(Math.random()*20+10)
-  });
-  logMsg("New general hired.");
- }
- renderGenerals();
- update();
+function render(){
+gold.innerText=game.gold;
+food.innerText=game.food;
+pop.innerText=game.pop;
+army.innerText=game.army;
+happy.innerText=game.happy;
+year.innerText=game.year;
+
+/* MAP */
+map.innerHTML="<h3>🗺 World Map</h3>";
+game.kingdoms.forEach((k,i)=>{
+map.innerHTML+=`<div class="list">
+${k.name} | ${k.owner?"Owned":"Enemy"}
+<button onclick="attack(${i})">Attack</button>
+</div>`;
+});
+
+/* TRADE */
+trade.innerHTML=`<h3>🤝 Trade</h3>
+<button onclick="tradeFood()">Sell 50 Food = +50 Gold</button>`;
+
+/* DIPLO */
+diplo.innerHTML="<h3>🕊 Diplomacy</h3><p>Simple war era diplomacy</p>";
+
+/* ARMY */
+armyP.innerHTML=`<h3>⚔ Army</h3>
+<button onclick="recruit()">Recruit 100 Soldiers</button>`;
+
+/* GENERALS */
+gen.innerHTML=`<h3>🎖 Generals</h3>
+<p>Total: ${game.generals}</p>
+<button onclick="hireGen()">Hire General (100 Gold)</button>`;
+
+/* COUNCIL */
+council.innerHTML=`<h3>🏛 Council</h3>
+<button onclick="taxUp()">Increase Tax</button>
+<button onclick="taxDown()">Reduce Tax</button>`;
+
+/* SAVE */
+save.innerHTML=`<h3>💾 Save / Load</h3>
+<button onclick="saveGame()">Save</button>
+<button onclick="loadGame()">Load</button>`;
 }
 
-function renderGenerals(){
- let ul=document.getElementById("glist");
- ul.innerHTML="";
- generals.forEach((g,i)=>{
-  let li=document.createElement("li");
-  li.innerText=`General ${i+1} | ATK ${g.atk} DEF ${g.def}`;
-  ul.appendChild(li);
- });
+function recruit(){
+if(game.pop>=100 && game.food>=50){
+game.pop-=100;
+game.food-=50;
+game.army+=100;
+}
+render();
 }
 
-function renderKingdoms(){
- let ul=document.getElementById("klist");
- ul.innerHTML="";
- kingdoms.forEach((k,i)=>{
-  let li=document.createElement("li");
-  li.innerText=`${k.name} - ${k.relation}`;
-  li.onclick=()=>selectEnemy(i);
-  ul.appendChild(li);
- });
+function hireGen(){
+if(game.gold>=100){
+game.gold-=100;
+game.generals++;
+}
+render();
 }
 
-function selectEnemy(i){
- selectedEnemy=kingdoms[i];
- document.getElementById("warTarget").innerText=
- "Target: "+selectedEnemy.name;
+function attack(i){
+let power=game.army+game.generals*50;
+if(power>game.kingdoms[i].power){
+game.kingdoms[i].owner=true;
+game.gold+=100;
+}else{
+game.army-=100;
+}
+render();
 }
 
-function renderDiplo(){
- let ul=document.getElementById("dlist");
- ul.innerHTML="";
- kingdoms.forEach((k,i)=>{
-  let li=document.createElement("li");
-  li.innerHTML=`${k.name} (${k.relation})
-   <button onclick="improve(${i})">Improve</button>
-   <button onclick="declareWar(${i})">War</button>`;
-  ul.appendChild(li);
- });
+function tradeFood(){
+if(game.food>=50){
+game.food-=50;
+game.gold+=50;
+}
+render();
 }
 
-function improve(i){
- if(king.gold>=50){
-  king.gold-=50;
-  kingdoms[i].relation="Neutral";
-  logMsg("Relation improved with "+kingdoms[i].name);
- }
- renderDiplo();update();
+function taxUp(){game.gold+=50;game.happy-=5;render();}
+function taxDown(){game.gold-=30;game.happy+=5;render();}
+
+function saveGame(){
+localStorage.setItem("kingdomSave",JSON.stringify(game));
+alert("Saved");
 }
 
-function declareWar(i){
- kingdoms[i].relation="Enemy";
- logMsg("War declared on "+kingdoms[i].name);
- renderDiplo();
+function loadGame(){
+let d=localStorage.getItem("kingdomSave");
+if(d)game=JSON.parse(d);
+render();
 }
 
-function attack(){
- if(!selectedEnemy || selectedEnemy.relation!="Enemy"){
-  logMsg("No enemy selected.");
-  return;
- }
- let genPower=generals.reduce((a,g)=>a+g.atk,0);
- let myPower=king.army+genPower;
- let enemyPower=selectedEnemy.power;
-
- if(myPower>enemyPower){
-  king.gold+=100;
-  king.army-=50;
-  logMsg("Victory! Looted 100 gold.");
- }else{
-  king.army-=120;
-  logMsg("Defeat! Heavy losses.");
- }
- update();
-}
-
-function nextTurn(){
- king.wheat+=30;
- king.meat+=20;
- month++;
- if(month>12){month=1;year++;logMsg("New Year "+year);}
- update();
-}
-
-function logMsg(t){
- log.innerHTML="• "+t+"<br>"+log.innerHTML;
-}
-
-const wheat=document.getElementById("wheat");
-const meat=document.getElementById("meat");
-const pop=document.getElementById("pop");
-const army=document.getElementById("army");
-const gold=document.getElementById("gold");
-const genCount=document.getElementById("genCount");
-const monthSpan=document.getElementById("month");
-const yearSpan=document.getElementById("year");
-
-renderKingdoms();
-renderDiplo();
-update();
+render();
 </script>
-
 </body>
-</html>
+</html> 
