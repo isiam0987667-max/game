@@ -1,0 +1,149 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kingdom Simulator</title>
+<style>
+body{margin:0;font-family:Arial;background:#1b1b1b;color:#fff}
+.top{background:#333;padding:8px;display:flex;flex-wrap:wrap;gap:10px;font-size:14px}
+.box{padding:10px}
+button{padding:10px;margin:5px;width:30%}
+.menu{position:fixed;bottom:0;width:100%;background:#222;padding:5px;text-align:center}
+.panel{display:none}
+.active{display:block}
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="top">
+🌾 <span id="wheat"></span>
+🍚 <span id="rice"></span>
+🍖 <span id="meat"></span>
+👥 <span id="pop"></span>
+⚔ <span id="army"></span>
+💰 <span id="gold"></span>
+📅 <span id="month"></span>/<span id="year"></span>
+</div>
+
+<div class="box">
+
+<!-- MAP -->
+<div id="map" class="panel active">
+<h3>🗺 World Map (1400 AD)</h3>
+<ul id="kingdomList"></ul>
+</div>
+
+<!-- ARMY -->
+<div id="armyPanel" class="panel">
+<h3>⚔ Army Recruitment</h3>
+<button onclick="recruit()">Recruit 100 Soldiers</button>
+<p>Cost: 100 Population, 20 Wheat, 10 Meat</p>
+</div>
+
+<!-- TRADE -->
+<div id="trade" class="panel">
+<h3>🤝 Trade</h3>
+<p>(Coming next step)</p>
+</div>
+
+<!-- DIPLOMACY -->
+<div id="diplo" class="panel">
+<h3>🕊 Diplomacy</h3>
+<p>Relations: Neutral / Enemy</p>
+</div>
+
+<!-- GENERALS -->
+<div id="generals" class="panel">
+<h3>🎖 Generals</h3>
+<p>No generals yet</p>
+</div>
+
+<!-- WAR ROOM -->
+<div id="war" class="panel">
+<h3>🏛 War Room</h3>
+<p>Prepare for future wars</p>
+</div>
+
+</div>
+
+<!-- MENU -->
+<div class="menu">
+<button onclick="openPanel('map')">Map</button>
+<button onclick="openPanel('trade')">Trade</button>
+<button onclick="openPanel('diplo')">Diplomacy</button><br>
+<button onclick="openPanel('armyPanel')">Army</button>
+<button onclick="openPanel('generals')">Generals</button>
+<button onclick="openPanel('war')">War Room</button>
+</div>
+
+<script>
+let king={
+ gold:500,
+ wheat:200,
+ rice:150,
+ meat:100,
+ population:1200,
+ army:300
+};
+
+let month=1,year=1400;
+
+const kingdoms=[
+"England","France","Ottoman Empire","Ming China","Timurid Empire",
+"Delhi Sultanate","Mamluk Sultanate","Castile","Aragon",
+"Holy Roman Empire","Poland","Lithuania","Hungary",
+"Portugal","Venice","Genoa","Byzantine Empire"
+];
+
+function updateUI(){
+ wheat.innerText=king.wheat;
+ rice.innerText=king.rice;
+ meat.innerText=king.meat;
+ pop.innerText=king.population;
+ army.innerText=king.army;
+ gold.innerText=king.gold;
+ monthSpan.innerText=month;
+ yearSpan.innerText=year;
+}
+
+const wheat=document.getElementById("wheat");
+const rice=document.getElementById("rice");
+const meat=document.getElementById("meat");
+const pop=document.getElementById("pop");
+const army=document.getElementById("army");
+const gold=document.getElementById("gold");
+const monthSpan=document.getElementById("month");
+const yearSpan=document.getElementById("year");
+
+function openPanel(id){
+ document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+function recruit(){
+ if(king.population>=100 && king.wheat>=20 && king.meat>=10){
+   king.population-=100;
+   king.wheat-=20;
+   king.meat-=10;
+   king.army+=100;
+   alert("100 soldiers recruited");
+ }else{
+   alert("Not enough resources or population");
+ }
+ updateUI();
+}
+
+const list=document.getElementById("kingdomList");
+kingdoms.forEach(k=>{
+ let li=document.createElement("li");
+ li.innerText="⚔ "+k+" (Enemy)";
+ list.appendChild(li);
+});
+
+updateUI();
+</script>
+
+</body>
+</html>
